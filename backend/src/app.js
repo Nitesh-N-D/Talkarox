@@ -32,7 +32,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use(compression());
-app.use(express.json({ limit: '10mb' })); // generous limit to allow base64 whiteboard images
+app.use(express.json({ limit: '10mb' }));
+app.set('trust proxy', 1); // generous limit to allow base64 whiteboard images
 app.use(cookieParser());
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
