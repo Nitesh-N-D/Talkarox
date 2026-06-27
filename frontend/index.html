@@ -2,51 +2,150 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#2563EB" />
 
+    <!-- ═══════════════════════════════════════════════
+         FAVICONS — generated via realfavicongenerator.net
+         Place all icon files in /public/ (same level as index.html)
+    ═══════════════════════════════════════════════ -->
+    <link rel="apple-touch-icon" sizes="180x180"       href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32"    href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16"    href="/favicon-16x16.png" />
+    <link rel="icon" type="image/svg+xml"              href="/favicon.svg" />
+    <link rel="shortcut icon"                          href="/favicon.ico" />
+
+    <!-- Android / Chrome -->
+    <link rel="manifest"                               href="/site.webmanifest" />
+    <meta name="theme-color"                           content="#2563EB" />
+    <meta name="mobile-web-app-capable"                content="yes" />
+
+    <!-- Safari Pinned Tab -->
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563EB" />
+
+    <!-- Windows / Edge Tiles -->
+    <meta name="msapplication-TileColor"               content="#2563EB" />
+    <meta name="msapplication-TileImage"               content="/mstile-144x144.png" />
+    <meta name="msapplication-config"                  content="/browserconfig.xml" />
+
+    <!-- Apple iOS web-app -->
+    <meta name="apple-mobile-web-app-capable"          content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title"            content="Talkarox" />
+
+    <!-- ═══════════════════════════════════════════════
+         PRIMARY SEO
+    ═══════════════════════════════════════════════ -->
     <title>Talkarox — Secure School Communication for Teachers & Parents</title>
-    <meta name="description" content="Talkarox is a free, AI-powered messaging platform for schools. Teachers and parents communicate professionally without ever sharing personal phone numbers." />
-    <meta name="keywords" content="school communication app, teacher parent messaging, education chat platform, school app free, teacher messaging app, parent teacher communication, school announcement app" />
-    <meta name="author" content="Talkarox" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://talkarox.app/" />
+    <meta name="description"
+          content="Talkarox is a free, AI-powered messaging platform for schools. Teachers and parents communicate professionally without ever sharing personal phone numbers." />
+    <meta name="keywords"
+          content="school communication app, teacher parent messaging, education chat platform, school app free, teacher messaging app, parent teacher communication, school announcement app, parent teacher app, classroom messaging, school chat" />
+    <meta name="author"   content="Talkarox" />
+    <meta name="robots"   content="index, follow" />
+    <meta name="revisit-after" content="7 days" />
+    <meta name="language" content="English" />
+    <link rel="canonical" href="https://talkarox.vercel.app/" />
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://talkarox.app/" />
-    <meta property="og:title" content="Talkarox — Secure School Communication for Teachers & Parents" />
-    <meta property="og:description" content="Free, AI-powered messaging built for schools. No personal numbers, no confusion — just professional, organized conversations." />
-    <meta property="og:image" content="https://talkarox.app/og-image.png" />
-    <meta property="og:site_name" content="Talkarox" />
+    <!-- Google Search Console — replace with your real token -->
+    <meta name="google-site-verification" content="REPLACE_WITH_YOUR_VERIFICATION_CODE" />
 
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Talkarox — Secure School Communication for Teachers & Parents" />
+    <!-- ═══════════════════════════════════════════════
+         OPEN GRAPH (Facebook / LinkedIn / WhatsApp)
+    ═══════════════════════════════════════════════ -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://talkarox.vercel.app/" />
+    <meta property="og:site_name"   content="Talkarox" />
+    <meta property="og:title"       content="Talkarox — Secure School Communication for Teachers &amp; Parents" />
+    <meta property="og:description" content="Free, AI-powered messaging built for schools. No personal numbers, no confusion — just professional, organised conversations." />
+    <meta property="og:image"       content="https://talkarox.vercel.app/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"   content="Talkarox app screenshot showing teacher-parent messaging" />
+    <meta property="og:locale"      content="en_US" />
+
+    <!-- ═══════════════════════════════════════════════
+         TWITTER / X CARD
+    ═══════════════════════════════════════════════ -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@talkarox" />
+    <meta name="twitter:creator"     content="@talkarox" />
+    <meta name="twitter:title"       content="Talkarox — Secure School Communication for Teachers &amp; Parents" />
     <meta name="twitter:description" content="Free, AI-powered messaging built for schools. No personal numbers, no confusion." />
-    <meta name="twitter:image" content="https://talkarox.app/og-image.png" />
+    <meta name="twitter:image"       content="https://talkarox.vercel.app/og-image.png" />
+    <meta name="twitter:image:alt"   content="Talkarox school messaging platform" />
 
-    <!-- Structured data for SEO -->
+    <!-- ═══════════════════════════════════════════════
+         STRUCTURED DATA — Schema.org JSON-LD
+    ═══════════════════════════════════════════════ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Talkarox",
-      "applicationCategory": "EducationalApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "description": "A free, AI-powered messaging platform built for schools, letting teachers and parents communicate professionally without sharing personal phone numbers."
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://talkarox.vercel.app/#app",
+          "name": "Talkarox",
+          "url": "https://talkarox.vercel.app/",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "description": "A free, AI-powered messaging platform built for schools, letting teachers and parents communicate professionally without sharing personal phone numbers.",
+          "screenshot": "https://talkarox.vercel.app/og-image.png",
+          "featureList": [
+            "AI-powered messaging",
+            "No personal phone numbers required",
+            "Secure teacher-parent communication",
+            "School announcements",
+            "Class group chats"
+          ],
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Talkarox",
+            "url": "https://talkarox.vercel.app/"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://talkarox.vercel.app/#website",
+          "url": "https://talkarox.vercel.app/",
+          "name": "Talkarox",
+          "description": "Secure school communication for teachers and parents",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Talkarox"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://talkarox.vercel.app/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://talkarox.vercel.app/#organization",
+          "name": "Talkarox",
+          "url": "https://talkarox.vercel.app/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://talkarox.vercel.app/android-chrome-512x512.png",
+            "width": 512,
+            "height": 512
+          },
+          "sameAs": []
+        }
+      ]
     }
     </script>
 
-    <!-- Google Search Console verification: replace content with the value Search Console gives you -->
-    <meta name="google-site-verification" content="REPLACE_WITH_YOUR_VERIFICATION_CODE" />
+    <!-- ═══════════════════════════════════════════════
+         PERFORMANCE HINTS
+    ═══════════════════════════════════════════════ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
   </head>
   <body>
     <div id="root"></div>
