@@ -1,0 +1,16 @@
+{
+  "name": "Talkarox - School Communication Platform",
+  "short_name": "Talkarox",
+  "description": "Secure, AI-powered messaging for schools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FCFBF8",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

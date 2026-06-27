@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.local
+dist
+build
+coverage
+.vscode
+backend/.env
+frontend/.env

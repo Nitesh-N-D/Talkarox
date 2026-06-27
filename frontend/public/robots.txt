@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /chat
+Disallow: /appointments
+Disallow: /announcements
+Disallow: /leaderboard
+Disallow: /school
+Disallow: /settings
+Disallow: /onboarding
+
+Sitemap: https://talkarox.app/sitemap.xml
