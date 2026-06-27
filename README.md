@@ -180,7 +180,7 @@ Open `http://localhost:5173`.
 - Deploying to Render + Vercel
 - Push notification setup
 
----https://www.linkedin.com/in/nitesh-n-d-249ab6325
+---
 
 ## 🔒 Security
 
