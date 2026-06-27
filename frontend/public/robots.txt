@@ -9,4 +9,4 @@ Disallow: /school
 Disallow: /settings
 Disallow: /onboarding
 
-Sitemap: https://talkarox.app/sitemap.xml
+Sitemap: https://talkarox.vercel.app/sitemap.xml
