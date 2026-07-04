@@ -142,7 +142,8 @@ export async function googleAuth(req, res, next) {
 
     res.json({ accessToken, refreshToken, user: sanitizeUser(user), isNewUser });
   } catch (err) {
-    next(new ApiError(401, 'Google sign-in failed. Please try again.'));
+    console.error('[googleAuth] error:', err?.message || err);
+    next(new ApiError(401, `Google sign-in failed: ${err?.message || 'unknown error'}`));
   }
 }
 
