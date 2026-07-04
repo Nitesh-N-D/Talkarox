@@ -43,8 +43,15 @@ export async function updateProfile(req, res, next) {
 
 export async function searchTeachers(req, res, next) {
   try {
-    const { query: q, schoolId } = req.query;
-    const params = [schoolId];
+    const { query: q, schoolId: querySchoolId } = req.query;
+    // Use schoolId from query param, or fall back to the requesting user's own schoolId
+    const effectiveSchoolId = querySchoolId || req.schoolId;
+
+    if (!effectiveSchoolId) {
+      return res.json([]); // user hasn't joined a school yet
+    }
+
+    const params = [effectiveSchoolId];
     let sql = `SELECT u.id, u.full_name AS "fullName", u.bio, u.status, u.avatar_url AS "avatarUrl",
                (${avgResponseMinutesSubquery('u.id')}) AS "avgResponseMinutes"
                FROM users u WHERE u.school_id = $1 AND u.role = 'TEACHER'`;
