@@ -22,7 +22,12 @@ export async function getProfile(req, res, next) {
 
 export async function updateProfile(req, res, next) {
   try {
-    const { fullName, bio, schoolId, onboardingComplete, preferredLanguage, avatarUrl } = req.body;
+    const { fullName, bio, schoolId, onboardingComplete, preferredLanguage, avatarUrl, role } = req.body;
+
+    // Validate role if provided
+    const validRoles = ['ADMIN', 'TEACHER', 'PARENT', 'STUDENT'];
+    const safeRole = role && validRoles.includes(role) ? role : null;
+
     const { rows } = await pool.query(
       `UPDATE users SET
         full_name = COALESCE($1, full_name),
@@ -30,9 +35,10 @@ export async function updateProfile(req, res, next) {
         school_id = COALESCE($3, school_id),
         onboarding_complete = COALESCE($4, onboarding_complete),
         preferred_language = COALESCE($5, preferred_language),
-        avatar_url = COALESCE($6, avatar_url)
-       WHERE id = $7 RETURNING *`,
-      [fullName, bio, schoolId, onboardingComplete, preferredLanguage, avatarUrl, req.userId]
+        avatar_url = COALESCE($6, avatar_url),
+        role = COALESCE($7, role)
+       WHERE id = $8 RETURNING *`,
+      [fullName, bio, schoolId, onboardingComplete, preferredLanguage, avatarUrl, safeRole, req.userId]
     );
     if (rows.length === 0) throw new ApiError(404, 'User not found');
     res.json(sanitizeUser(rows[0]));
@@ -44,7 +50,8 @@ export async function updateProfile(req, res, next) {
 export async function searchTeachers(req, res, next) {
   try {
     const { query: q, schoolId: querySchoolId } = req.query;
-    // Use schoolId from query param, or fall back to the requesting user's own schoolId
+    // Use schoolId from query param, fall back to the requesting user's own schoolId
+    // (decoded from JWT by the auth middleware and set on req.schoolId)
     const effectiveSchoolId = querySchoolId || req.schoolId;
 
     if (!effectiveSchoolId) {
