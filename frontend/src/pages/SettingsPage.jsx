@@ -256,13 +256,69 @@ function OfficeHoursTab({ user }) {
 }
 
 function AccountTab({ logout }) {
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const [role, setRole] = useState(user?.role || 'PARENT');
+  const [savingRole, setSavingRole] = useState(false);
+
+  const ROLE_OPTIONS = [
+    { value: 'TEACHER', label: 'Teacher' },
+    { value: 'PARENT', label: 'Parent' },
+    { value: 'STUDENT', label: 'Student' },
+    { value: 'ADMIN', label: 'School Admin' },
+  ];
+
+  const handleSaveRole = async () => {
+    if (role === user?.role) return;
+    setSavingRole(true);
+    try {
+      const { data } = await updateProfile({ role });
+      setUser(data);
+      toast.success('Role updated — please sign in again for the change to take full effect.');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Could not update role');
+    } finally {
+      setSavingRole(false);
+    }
+  };
+
   return (
-    <Card className="max-w-lg space-y-4">
+    <Card className="max-w-lg space-y-5">
+      {/* Role correction — important for Google sign-in users who got wrong role */}
       <div>
+        <h3 className="font-semibold text-ink mb-1">Your role</h3>
+        <p className="text-sm text-ink-mute mb-3">
+          If you signed in with Google and got assigned the wrong role (e.g. "Parent" instead of "Teacher"),
+          change it here then sign out and back in.
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          {ROLE_OPTIONS.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setRole(r.value)}
+              className={`px-3 py-1.5 rounded-btn text-sm font-medium border transition-colors ${
+                role === r.value
+                  ? 'bg-brand text-white border-brand'
+                  : 'border-gray-300 text-ink-mute hover:border-brand hover:text-brand'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        {role !== user?.role && (
+          <Button className="mt-3" size="sm" onClick={handleSaveRole} loading={savingRole}>
+            Save role
+          </Button>
+        )}
+      </div>
+
+      <div className="pt-1 border-t border-gray-100">
         <h3 className="font-semibold text-ink mb-1">Sign out</h3>
         <p className="text-sm text-ink-mute mb-3">You'll need to sign in again to access your messages.</p>
         <Button variant="outline" icon={LogOut} onClick={logout}>Sign out</Button>
       </div>
+
       <div className="pt-4 border-t border-gray-100">
         <h3 className="font-semibold text-danger mb-1">Delete account</h3>
         <p className="text-sm text-ink-mute mb-3">This permanently removes your account and message history. This cannot be undone.</p>
