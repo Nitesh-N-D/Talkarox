@@ -116,8 +116,17 @@ export async function login(req, res, next) {
 
 export async function googleAuth(req, res, next) {
   try {
-    const { idToken } = req.body;
-    const ticket = await googleClient.verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID });
+    const { idToken, role } = req.body;
+    if (!idToken) throw new Error('No idToken received from frontend');
+
+    // Validate role — only accept known values, default to PARENT if missing
+    const validRoles = ['ADMIN', 'TEACHER', 'PARENT', 'STUDENT'];
+    const assignedRole = validRoles.includes(role) ? role : 'PARENT';
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
     const payload = ticket.getPayload();
     const { sub: googleId, email, name, picture } = payload;
 
@@ -126,24 +135,28 @@ export async function googleAuth(req, res, next) {
     let isNewUser = false;
 
     if (!user) {
+      // Brand-new user — create with the role they chose on the register page
       isNewUser = true;
       const insertResult = await pool.query(
         `INSERT INTO users (full_name, email, google_id, role, avatar_url, email_verified)
          VALUES ($1, $2, $3, $4, $5, true) RETURNING *`,
-        [name, email, googleId, 'PARENT', picture] // default role; updated during onboarding
+        [name, email, googleId, assignedRole, picture]
       );
       user = insertResult.rows[0];
     } else if (!user.google_id) {
+      // Existing email/password user linking Google — keep their existing role, don't overwrite
       await pool.query('UPDATE users SET google_id = $1, email_verified = true WHERE id = $2', [googleId, user.id]);
     }
+    // Returning Google user — no role change, just sign them back in
 
     await pool.query('UPDATE users SET status = $1, last_seen_at = now() WHERE id = $2', ['ONLINE', user.id]);
     const { accessToken, refreshToken } = await issueTokens(user);
 
     res.json({ accessToken, refreshToken, user: sanitizeUser(user), isNewUser });
   } catch (err) {
-    console.error('[googleAuth] error:', err?.message || err);
-    next(new ApiError(401, `Google sign-in failed: ${err?.message || 'unknown error'}`));
+    // Log the real error so it shows in Render/production logs for debugging
+    console.error('[googleAuth] Failed:', err?.message || err);
+    next(new ApiError(401, `Google sign-in failed: ${err?.message || 'token verification error'}`));
   }
 }
 
@@ -171,19 +184,11 @@ export async function refreshTokenHandler(req, res, next) {
 
 export async function logout(req, res, next) {
   try {
-    const refreshToken = req.body?.refreshToken;
-
+    const { refreshToken } = req.body;
     if (refreshToken) {
-      await pool.query(
-        'DELETE FROM refresh_tokens WHERE token = $1',
-        [refreshToken]
-      );
+      await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [refreshToken]);
     }
-
-    res.json({
-      success: true,
-      message: 'Logged out',
-    });
+    res.json({ message: 'Logged out' });
   } catch (err) {
     next(err);
   }
