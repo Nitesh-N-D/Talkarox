@@ -66,7 +66,7 @@ export default API;
 // ---- Auth ----
 export const registerUser = (payload) => API.post('/auth/register', payload);
 export const loginUser = (payload) => API.post('/auth/login', payload);
-export const googleAuth = (idToken) => API.post('/auth/google', { idToken });
+export const googleAuth = (idToken, role) => API.post('/auth/google', { idToken, role });
 export const logoutUser = () => API.post('/auth/logout');
 export const verifyEmail = (token) => API.post('/auth/verify-email', { token });
 export const requestPasswordReset = (email) => API.post('/auth/forgot-password', { email });

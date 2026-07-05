@@ -91,7 +91,7 @@ export default function RegisterPage() {
               <ArrowLeft size={15} /> Change role
             </button>
 
-            <GoogleAuthButton onSuccess={() => navigate('/onboarding/school', { state: { role } })} />
+            <GoogleAuthButton role={role} onSuccess={() => navigate('/onboarding/school', { state: { role } })} />
 
             <div className="flex items-center gap-3 text-xs text-ink-faint">
               <div className="flex-1 h-px bg-gray-200" />
