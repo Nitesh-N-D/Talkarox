@@ -55,10 +55,10 @@ export const useAuthStore = create(
         }
       },
 
-      loginWithGoogle: async (idToken) => {
+      loginWithGoogle: async (idToken, role) => {
         set({ isLoading: true, error: null });
         try {
-          const { data } = await googleAuth(idToken);
+          const { data } = await googleAuth(idToken, role);
           localStorage.setItem('talkarox_token', data.accessToken);
           localStorage.setItem('talkarox_refresh_token', data.refreshToken);
           set({
