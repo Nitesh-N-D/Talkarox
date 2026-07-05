@@ -2,14 +2,14 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
-export default function GoogleAuthButton({ onSuccess }) {
+export default function GoogleAuthButton({ onSuccess, role }) {
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
 
   return (
     <div className="w-full flex justify-center">
       <GoogleLogin
         onSuccess={async (credentialResponse) => {
-          const result = await loginWithGoogle(credentialResponse.credential);
+          const result = await loginWithGoogle(credentialResponse.credential, role);
           if (result.success) {
             onSuccess?.(result);
           } else {
