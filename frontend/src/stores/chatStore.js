@@ -10,7 +10,7 @@ export const useChatStore = create((set, get) => ({
   threadMessages: [],
   typingUsers: {},
   presenceMap: {},
-  filter: 'ALL', // ALL | UNREAD | ACADEMIC | URGENT | ADMINISTRATIVE | HOMEWORK_HELP | PARENT_CONCERN
+  filter: 'ALL',
   loading: false,
   threadLoading: false,
 
@@ -82,7 +82,8 @@ export const useChatStore = create((set, get) => ({
     set((state) => {
       const inActiveThread =
         state.activeChat &&
-        (message.senderId === state.activeChat.userId || message.recipientId === state.activeChat.userId);
+        (message.senderId === state.activeChat.userId ||
+          message.recipientId === state.activeChat.userId);
 
       return {
         threadMessages: inActiveThread
@@ -90,19 +91,57 @@ export const useChatStore = create((set, get) => ({
           : state.threadMessages,
         chats: state.chats.map((c) =>
           c.userId === message.senderId || c.userId === message.recipientId
-            ? { ...c, lastMessage: message.content, lastMessageTime: message.createdAt, unreadCount: c.userId === message.senderId ? (c.unreadCount || 0) + 1 : c.unreadCount }
+            ? {
+                ...c,
+                lastMessage: message.content,
+                lastMessageTime: message.createdAt,
+                unreadCount:
+                  c.userId === message.senderId
+                    ? (c.unreadCount || 0) + 1
+                    : c.unreadCount,
+              }
             : c
         ),
       };
     });
   },
 
-  markAsRead: (messageId, senderId) => {
-    emitMessageRead(messageId, senderId);
-    markMessageRead(messageId).catch(() => {});
+  // Called when the RECIPIENT opens a thread — marks all unread messages
+  // in that thread as read and emits socket events so the SENDER's
+  // bubbles flip from single-tick to double-tick in real time.
+  markAllThreadRead: (senderId) => {
+    const { threadMessages } = get();
+    const unread = threadMessages.filter(
+      (m) => m.senderId === senderId && !m.readAt
+    );
+    if (unread.length === 0) return;
+
+    const now = new Date().toISOString();
+
+    // Mark locally immediately so the UI clears the unread badge at once
     set((state) => ({
       threadMessages: state.threadMessages.map((m) =>
-        m.id === messageId ? { ...m, readAt: new Date().toISOString() } : m
+        m.senderId === senderId && !m.readAt ? { ...m, readAt: now } : m
+      ),
+      chats: state.chats.map((c) =>
+        c.userId === senderId ? { ...c, unreadCount: 0 } : c
+      ),
+    }));
+
+    // Tell backend + emit socket so the sender's screen updates
+    unread.forEach((m) => {
+      markMessageRead(m.id).catch(() => {});
+      emitMessageRead(m.id, senderId);
+    });
+  },
+
+  // Called on the SENDER side when the socket fires message_read_receipt —
+  // flips that message's readAt so the tick turns blue immediately.
+  handleReadReceipt: (messageId) => {
+    const now = new Date().toISOString();
+    set((state) => ({
+      threadMessages: state.threadMessages.map((m) =>
+        m.id === messageId ? { ...m, readAt: now } : m
       ),
     }));
   },
