@@ -31,6 +31,7 @@ export default function ChatPage() {
     chats, activeChat, contactContext, threadMessages, loading, threadLoading, filter,
     loadChats, setActiveChat, setFilter, sendMessage, receiveMessage,
     setTyping, notifyTyping, typingUsers, filteredChats, updatePresence,
+    markAllThreadRead, handleReadReceipt,
   } = useChatStore();
 
   const [showWhiteboard, setShowWhiteboard] = useState(false);
@@ -44,22 +45,50 @@ export default function ChatPage() {
     loadChats();
   }, [loadChats]);
 
+  // Socket listener — handles all real-time events including read receipts
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
+
     socket.on('new_message', (msg) => receiveMessage(msg));
     socket.on('typing_indicator', ({ recipientId, typing }) => setTyping(recipientId, typing));
     socket.on('user_status_changed', ({ userId, status }) => updatePresence(userId, status));
+
+    // Fired on the SENDER when the recipient marks a message as read.
+    // Flips the single grey tick → double blue tick on the sender's screen.
+    socket.on('message_read_receipt', ({ messageId }) => {
+      handleReadReceipt(messageId);
+    });
+
     return () => {
       socket.off('new_message');
       socket.off('typing_indicator');
       socket.off('user_status_changed');
+      socket.off('message_read_receipt');
     };
-  }, [receiveMessage, setTyping, updatePresence]);
+  }, [receiveMessage, setTyping, updatePresence, handleReadReceipt]);
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [threadMessages]);
+
+  // When thread finishes loading, mark all messages from the other person as read.
+  // This fires on the RECIPIENT side — tells the sender their messages were seen.
+  useEffect(() => {
+    if (!threadLoading && activeChat && threadMessages.length > 0) {
+      markAllThreadRead(activeChat.userId);
+    }
+  }, [threadLoading, activeChat?.userId]);
+
+  // Also mark as read when new messages arrive while the thread is open
+  useEffect(() => {
+    if (!activeChat || !threadMessages.length) return;
+    const latest = threadMessages[threadMessages.length - 1];
+    if (latest && latest.senderId === activeChat.userId && !latest.readAt) {
+      markAllThreadRead(activeChat.userId);
+    }
+  }, [threadMessages.length, activeChat?.userId]);
 
   useEffect(() => {
     if (!searchQuery.trim()) { setSearchResults([]); return; }
@@ -91,18 +120,16 @@ export default function ChatPage() {
     }
   };
 
-  // Start a new chat with a teacher found from the directory
   const handleStartNewChat = (teacher) => {
     setShowNewChat(false);
-    const chatObj = {
+    handleSelectChat({
       userId: teacher.id,
       name: teacher.fullName,
       status: teacher.status,
       avatarUrl: teacher.avatarUrl,
       lastMessage: '',
       unreadCount: 0,
-    };
-    handleSelectChat(chatObj);
+    });
   };
 
   const visibleChats = filteredChats();
@@ -111,7 +138,7 @@ export default function ChatPage() {
   return (
     <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
 
-      {/* Chat list panel */}
+      {/* Chat list */}
       <div className={clsx(
         'w-full md:w-80 lg:w-96 border-r border-gray-100 bg-white flex flex-col flex-shrink-0',
         showMobileThread && 'hidden md:flex'
@@ -131,7 +158,6 @@ export default function ChatPage() {
               onClick={() => setShowNewChat(true)}
               className="flex-shrink-0 w-9 h-9 rounded-card bg-brand text-white flex items-center justify-center hover:bg-brand-700 transition-colors"
               aria-label="Start new conversation"
-              title="Start new conversation"
             >
               <Plus size={18} />
             </button>
@@ -179,7 +205,9 @@ export default function ChatPage() {
               <EmptyChatIllustration className="w-36" />
               <div>
                 <p className="font-semibold text-ink text-sm">No conversations yet</p>
-                <p className="text-xs text-ink-faint mt-1">Press <span className="font-bold text-brand">+</span> to find a teacher and start chatting.</p>
+                <p className="text-xs text-ink-faint mt-1">
+                  Press <span className="font-bold text-brand">+</span> to find a teacher and start chatting.
+                </p>
               </div>
               <Button size="sm" icon={UserSearch} onClick={() => setShowNewChat(true)}>
                 Find a teacher
@@ -198,7 +226,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Message thread */}
+      {/* Thread */}
       <div className={clsx('flex-1 flex flex-col min-w-0 bg-paper-flat', !showMobileThread && 'hidden md:flex')}>
         {!activeChat ? (
           <div className="flex-1 flex items-center justify-center text-center px-8">
@@ -216,7 +244,12 @@ export default function ChatPage() {
               <button onClick={() => setShowMobileThread(false)} className="md:hidden text-ink-mute">
                 <ArrowLeft size={20} />
               </button>
-              <PresenceAvatar name={activeChat.name} userId={activeChat.userId} status={activeChat.status} size="md" />
+              <PresenceAvatar
+                name={activeChat.name}
+                userId={activeChat.userId}
+                status={activeChat.status}
+                size="md"
+              />
               <div className="min-w-0">
                 <p className="font-semibold text-ink text-sm truncate">{activeChat.name}</p>
                 <p className="text-xs text-ink-faint">
@@ -231,9 +264,13 @@ export default function ChatPage() {
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
               {threadLoading
                 ? Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className={clsx('h-12 w-2/3 rounded-card skeleton-shimmer animate-shimmer', i % 2 ? 'self-end' : 'self-start')} />
+                    <div key={i} className={clsx(
+                      'h-12 w-2/3 rounded-card skeleton-shimmer animate-shimmer',
+                      i % 2 ? 'self-end' : 'self-start'
+                    )} />
                   ))
-                : <AnimatePresence initial={false}>
+                : (
+                  <AnimatePresence initial={false}>
                     {threadMessages.map((msg) => (
                       <MessageBubble
                         key={msg.id}
@@ -243,6 +280,7 @@ export default function ChatPage() {
                       />
                     ))}
                   </AnimatePresence>
+                )
               }
             </div>
 
@@ -268,7 +306,7 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Teacher directory / new chat modal */}
+      {/* Teacher directory modal */}
       {showNewChat && (
         <TeacherDirectoryModal
           user={user}
@@ -297,9 +335,7 @@ function TeacherDirectoryModal({ user, onSelect, onClose }) {
     debounce(async (q) => {
       setLoading(true);
       try {
-        const params = { schoolId: user?.schoolId };
-        if (q) params.query = q;
-        const { data } = await searchTeachers(params.query, params.schoolId);
+        const { data } = await searchTeachers(q || undefined, user?.schoolId);
         setTeachers(data);
       } catch {
         setTeachers([]);
@@ -371,7 +407,12 @@ function TeacherDirectoryModal({ user, onSelect, onClose }) {
                 onClick={() => onSelect(teacher)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-paper-flat transition-colors text-left border-b border-gray-50 last:border-0"
               >
-                <PresenceAvatar name={teacher.fullName} userId={teacher.id} status={teacher.status || 'OFFLINE'} size="md" />
+                <PresenceAvatar
+                  name={teacher.fullName}
+                  userId={teacher.id}
+                  status={teacher.status || 'OFFLINE'}
+                  size="md"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink text-sm truncate">{teacher.fullName}</p>
                   <p className="text-xs text-ink-faint truncate">{teacher.bio || 'Teacher'}</p>
@@ -422,7 +463,10 @@ function describePresence(status, officeHours) {
     });
     if (activeSlot) {
       const [eh, em] = activeSlot.endTime.split(':').map(Number);
-      const label = new Date(0, 0, 0, eh, em).toLocaleTimeString('en-US', { hour: 'numeric', minute: em ? '2-digit' : undefined });
+      const label = new Date(0, 0, 0, eh, em).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: em ? '2-digit' : undefined,
+      });
       return `Available until ${label}`;
     }
     const nextSlot = officeHours.find((s) => s.dayOfWeek > day) || officeHours[0];
