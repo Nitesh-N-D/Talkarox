@@ -24,6 +24,11 @@ dotenv.config();
 
 const app = express();
 
+// MUST be first — tells Express to trust the X-Forwarded-For header set by
+// Render/Vercel/Cloudflare reverse proxies. Without this, express-rate-limit
+// throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR on every request in production.
+app.set('trust proxy', 1);
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
@@ -33,7 +38,6 @@ app.use(cors({
 }));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
-app.set('trust proxy', 1); // generous limit to allow base64 whiteboard images
 app.use(cookieParser());
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
